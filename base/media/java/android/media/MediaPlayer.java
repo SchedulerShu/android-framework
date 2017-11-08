@@ -1691,7 +1691,7 @@ public class MediaPlayer extends PlayerBase
      * same codec are supported on a device. Even if multiple instances
      * of the same codec are supported, some performance degradation
      * may be expected when unnecessary multiple instances are used
-     * at the same time.
+     * at the same time.回收流媒体资源。 
      */
     public void release() {
         baseRelease();
@@ -1762,6 +1762,7 @@ public class MediaPlayer extends PlayerBase
      * for a list of stream types. Must call this method before prepare() or
      * prepareAsync() in order for the target stream type to become effective
      * thereafter.
+     * 设置播放流媒体类型。
      *
      * @param streamtype the audio stream type
      * @see android.media.AudioManager

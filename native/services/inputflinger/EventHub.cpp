@@ -212,6 +212,12 @@ const uint32_t EventHub::EPOLL_ID_WAKE;
 const int EventHub::EPOLL_SIZE_HINT;
 const int EventHub::EPOLL_MAX_EVENTS;
 
+/**
+ *该方法主要功能：
+	 *初始化INotify（监听”/dev/input”），并添加到epoll实例
+	 *创建非阻塞模式的管道，并添加到epoll;
+*/
+
 EventHub::EventHub(void) :
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1), mControllerNumbers(),
         mOpeningDevices(0), mClosingDevices(0),
@@ -220,10 +226,12 @@ EventHub::EventHub(void) :
         mPendingEventCount(0), mPendingEventIndex(0), mPendingINotify(false) {
     acquire_wake_lock(PARTIAL_WAKE_LOCK, WAKE_LOCK_ID);
 
+	//创建epoll
     mEpollFd = epoll_create(EPOLL_SIZE_HINT);
     LOG_ALWAYS_FATAL_IF(mEpollFd < 0, "Could not create epoll instance.  errno=%d", errno);
 
     mINotifyFd = inotify_init();
+	//此处DEVICE_PATH为"/dev/input"，监听该设备路径
     int result = inotify_add_watch(mINotifyFd, DEVICE_PATH, IN_DELETE | IN_CREATE);
     LOG_ALWAYS_FATAL_IF(result < 0, "Could not register INotify for %s.  errno=%d",
             DEVICE_PATH, errno);
@@ -232,16 +240,18 @@ EventHub::EventHub(void) :
     memset(&eventItem, 0, sizeof(eventItem));
     eventItem.events = EPOLLIN;
     eventItem.data.u32 = EPOLL_ID_INOTIFY;
+	//添加INotify到epoll实例
     result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mINotifyFd, &eventItem);
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not add INotify to epoll instance.  errno=%d", errno);
 
     int wakeFds[2];
-    result = pipe(wakeFds);
+    result = pipe(wakeFds); //创建管道
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not create wake pipe.  errno=%d", errno);
 
     mWakeReadPipeFd = wakeFds[0];
     mWakeWritePipeFd = wakeFds[1];
 
+	//将pipe的读和写都设置为非阻塞方式
     result = fcntl(mWakeReadPipeFd, F_SETFL, O_NONBLOCK);
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not make wake read pipe non-blocking.  errno=%d",
             errno);
@@ -251,6 +261,7 @@ EventHub::EventHub(void) :
             errno);
 
     eventItem.data.u32 = EPOLL_ID_WAKE;
+	//添加管道的读端到epoll实例
     result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeReadPipeFd, &eventItem);
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not add wake read pipe to epoll instance.  errno=%d",
             errno);

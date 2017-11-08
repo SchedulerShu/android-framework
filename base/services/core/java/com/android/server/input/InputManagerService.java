@@ -136,7 +136,7 @@ public class InputManagerService extends IInputManager.Stub
     private static final int MSG_INPUT_METHOD_SUBTYPE_CHANGED = 7;
 
     // Pointer to native input manager service object.
-    private final long mPtr;
+    private final long mPtr;//指向Native层的NativeInputManager对象；
 
     private final Context mContext;
     private final InputManagerHandler mHandler;
@@ -301,13 +301,16 @@ public class InputManagerService extends IInputManager.Stub
 
     public InputManagerService(Context context) {
         this.mContext = context;
+		// 运行在线程"android.display"
         this.mHandler = new InputManagerHandler(DisplayThread.get().getLooper());
 
         mUseDevInputEventForAudioJack =
                 context.getResources().getBoolean(R.bool.config_useDevInputEventForAudioJack);
         Slog.i(TAG, "Initializing input manager, mUseDevInputEventForAudioJack="
                 + mUseDevInputEventForAudioJack);
-        mPtr = nativeInit(this, mContext, mHandler.getLooper().getQueue());
+
+		//初始化native对象
+		mPtr = nativeInit(this, mContext, mHandler.getLooper().getQueue());
 
         LocalServices.addService(InputManagerInternal.class, new LocalService());
     }

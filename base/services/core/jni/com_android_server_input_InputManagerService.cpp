@@ -265,9 +265,9 @@ public:
 private:
     sp<InputManager> mInputManager;
 
-    jobject mContextObj;
-    jobject mServiceObj;
-    sp<Looper> mLooper;
+    jobject mContextObj; //指向Java层的context
+    jobject mServiceObj; //指向Java层的IMS对象；
+    sp<Looper> mLooper;  //指“android.display”线程的Looper;
 
     Mutex mLock;
     struct Locked {
@@ -314,8 +314,8 @@ NativeInputManager::NativeInputManager(jobject contextObj,
         mLooper(looper), mInteractive(true) {
     JNIEnv* env = jniEnv();
 
-    mContextObj = env->NewGlobalRef(contextObj);
-    mServiceObj = env->NewGlobalRef(serviceObj);
+    mContextObj = env->NewGlobalRef(contextObj);//上层IMS的context
+    mServiceObj = env->NewGlobalRef(serviceObj);//上层IMS对象
 
     {
         AutoMutex _l(mLock);
@@ -326,8 +326,8 @@ NativeInputManager::NativeInputManager(jobject contextObj,
     }
     mInteractive = true;
 
-    sp<EventHub> eventHub = new EventHub();
-    mInputManager = new InputManager(eventHub, this, this);
+    sp<EventHub> eventHub = new EventHub();  // 创建EventHub对象
+    mInputManager = new InputManager(eventHub, this, this);// 创建InputManager对象
 }
 
 NativeInputManager::~NativeInputManager() {
@@ -1135,16 +1135,18 @@ int32_t NativeInputManager::getCustomPointerIconId() {
 
 static jlong nativeInit(JNIEnv* env, jclass /* clazz */,
         jobject serviceObj, jobject contextObj, jobject messageQueueObj) {
+
+	//获取native消息队列
     sp<MessageQueue> messageQueue = android_os_MessageQueue_getMessageQueue(env, messageQueueObj);
     if (messageQueue == NULL) {
         jniThrowRuntimeException(env, "MessageQueue is not initialized.");
         return 0;
     }
-
+	//创建Native的InputManager
     NativeInputManager* im = new NativeInputManager(contextObj, serviceObj,
             messageQueue->getLooper());
     im->incStrong(0);
-    return reinterpret_cast<jlong>(im);
+    return reinterpret_cast<jlong>(im); //返回Native对象的指针
 }
 
 static void nativeStart(JNIEnv* env, jclass /* clazz */, jlong ptr) {

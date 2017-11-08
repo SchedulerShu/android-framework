@@ -482,7 +482,6 @@ public class PreferenceManager {
                     storageContext = mContext;
                     break;
             }
-
             mSharedPreferences = storageContext.getSharedPreferences(mSharedPreferencesName,
                     mSharedPreferencesMode);
         }

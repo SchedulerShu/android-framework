@@ -748,6 +748,7 @@ public final class SystemServer {
 
             mActivityManagerService.setWindowManager(wm);
 
+			//将InputMonitor对象保持到IMS对象
             inputManager.setWindowManagerCallbacks(wm.getInputMonitor());
             inputManager.start();
 
