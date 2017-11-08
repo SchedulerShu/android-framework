@@ -74,6 +74,7 @@ final class SharedPreferencesImpl implements SharedPreferences {
 
     SharedPreferencesImpl(File file, int mode) {
         mFile = file;
+		//创建为.bak为后缀的备份文件
         mBackupFile = makeBackupFile(file);
         mMode = mode;
         mLoaded = false;
@@ -194,7 +195,7 @@ final class SharedPreferencesImpl implements SharedPreferences {
             mListeners.remove(listener);
         }
     }
-
+	//检查是否加载完成
     private void awaitLoadedLocked() {
         if (!mLoaded) {
             // Raise an explicit StrictMode onReadFromDisk for this
@@ -308,7 +309,7 @@ final class SharedPreferencesImpl implements SharedPreferences {
 
         public Editor putString(String key, @Nullable String value) {
             synchronized (this) {
-                mModified.put(key, value);
+                mModified.put(key, value); //插入数据, 先暂存到mModified对象
                 return this;
             }
         }
@@ -343,15 +344,15 @@ final class SharedPreferencesImpl implements SharedPreferences {
                 return this;
             }
         }
-
-        public Editor remove(String key) {
+	
+        public Editor remove(String key) {//移除数据
             synchronized (this) {
                 mModified.put(key, this);
                 return this;
             }
         }
 
-        public Editor clear() {
+        public Editor clear() { //清空全部数据
             synchronized (this) {
                 mClear = true;
                 return this;

@@ -352,8 +352,10 @@ class ContextImpl extends Context {
             if (mSharedPrefsPaths == null) {
                 mSharedPrefsPaths = new ArrayMap<>();
             }
+			//先从mSharedPrefsPaths查询是否存在相应文件
             file = mSharedPrefsPaths.get(name);
             if (file == null) {
+				//如果文件不存在, 则创建新的文件
                 file = getSharedPreferencesPath(name);
                 mSharedPrefsPaths.put(name, file);
             }
@@ -475,6 +477,7 @@ class ContextImpl extends Context {
     private File getPreferencesDir() {
         synchronized (mSync) {
             if (mPreferencesDir == null) {
+				 //创建目录/data/data/package name/shared_prefs/
                 mPreferencesDir = new File(getDataDir(), "shared_prefs");
             }
             return ensurePrivateDirExists(mPreferencesDir);
@@ -636,7 +639,7 @@ class ContextImpl extends Context {
 
     @Override
     public File getSharedPreferencesPath(String name) {
-        return makeFilename(getPreferencesDir(), name + ".xml");
+        return makeFilename(getPreferencesDir(), name + ".xml");//创建xml文件
     }
 
     @Override
@@ -2154,6 +2157,13 @@ class ContextImpl extends Context {
                 throw new SecurityException("MODE_WORLD_WRITEABLE no longer supported");
             }
         }
+
+		/**Note:
+			从Android N开始, 创建的SP文件模式, 不允许MODE_WORLD_READABLE和MODE_WORLD_WRITEABLE模块, 
+			否则会直接抛出异常SecurityException. MODE_MULTI_PROCESS这种多进程的方式也是Google不推荐的方式.
+			当设置MODE_MULTI_PROCESS模式, 则每次getSharedPreferences过程, 会检查SP文件上次修改时间和文件大小, 
+			一旦所有修改则会重新从磁盘加载文件. 强烈建议App不用使用该方式来实现多个进程实现 同一个SP文件.
+		*/
     }
 
     @SuppressWarnings("deprecation")
