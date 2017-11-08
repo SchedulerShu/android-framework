@@ -2363,8 +2363,8 @@ public final class MotionEvent extends InputEvent implements Parcelable {
      * Returns the original raw X coordinate of this event.  For touch
      * events on the screen, this is the original location of the event
      * on the screen, before it had been adjusted for the containing window
-     * and views.
-     *
+     * and views.获取事件相对于屏幕左上角的横纵坐标
+     *   
      * @see #getX(int)
      * @see #AXIS_X
      */
@@ -2376,7 +2376,7 @@ public final class MotionEvent extends InputEvent implements Parcelable {
      * Returns the original raw Y coordinate of this event.  For touch
      * events on the screen, this is the original location of the event
      * on the screen, before it had been adjusted for the containing window
-     * and views.
+     * and views. 获取事件相对于屏幕左上角的横纵坐标
      *
      * @see #getY(int)
      * @see #AXIS_Y

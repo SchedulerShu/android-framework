@@ -2207,6 +2207,15 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
         return transformedEvent;
     }
 
+	/**
+	 *
+ 	 * ViewGroup对事件的分发，当ViewGroup接收一个事件序列以后，首先会判断是否拦截该事件，若是拦截该事件，
+ 	 * 则通过调用父类View的dispatchTouchEvent来处理这个事件。若是不去拦截这一事件，便将该事件下发到子View
+ 	 * 当中。若果说ViewGroup没有子View，或者说子View对事件处理失败，则将该事件有交由该ViewGroup处理，若是
+ 	 * 该ViewGroup对事件依然处理失败，最终则会将事件交由Activity进行处理。
+ 	 *
+ 	*/
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (mInputEventConsistencyVerifier != null) {
@@ -2234,14 +2243,18 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
                 // Throw away all previous state when starting a new touch gesture.
                 // The framework may have dropped the up or cancel event for the previous gesture
                 // due to an app switch, ANR, or some other state change.
-                cancelAndClearTouchTargets(ev);
-                resetTouchState();
+                cancelAndClearTouchTargets(ev); //清空事件分发的目标和状态
+                resetTouchState();//重置了触摸状态
             }
 
             // Check for interception.
             final boolean intercepted;
             if (actionMasked == MotionEvent.ACTION_DOWN
                     || mFirstTouchTarget != null) {
+				/**
+				 * 当事件为MotionEvent.ACTION_DOWN时，会重置FLAG_DISALLOW_INTERCEPT，
+ 				 * 也就是说!disallowIntercept一定为true，必然会执行onInterceptTouchEvent方法
+ 				 */	
                 final boolean disallowIntercept = (mGroupFlags & FLAG_DISALLOW_INTERCEPT) != 0;
                 if (!disallowIntercept) {
                     intercepted = onInterceptTouchEvent(ev);
@@ -2514,7 +2527,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
     private void resetTouchState() {
         clearTouchTargets();
         resetCancelNextUpFlag(this);
-        mGroupFlags &= ~FLAG_DISALLOW_INTERCEPT;
+        mGroupFlags &= ~FLAG_DISALLOW_INTERCEPT;//禁止ViewGroup拦截事件的标记,当设置了这个标记以后ViewGroup便无法拦截除了ACTION_DOWN以外的其它事件
         mNestedScrollAxes = SCROLL_AXIS_NONE;
     }
 
@@ -2550,6 +2563,9 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 
     /**
      * Cancels and clears all touch targets.
+     * mFirstTouchTarget，它是TouchTarget对象，TouchTarget是ViewGroup的一个内部类，
+     * TouchTarget采用链表数据结构进行存储View。
+     * 而在这个方法中主要的作用就是清空mFirstTouchTarget链表并将mFirstTouchTarget设为空。 
      */
     private void cancelAndClearTouchTargets(MotionEvent event) {
         if (mFirstTouchTarget != null) {
@@ -2953,6 +2969,11 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
      * them dispatched to this ViewGroup through onTouchEvent().
      * The current target will receive an ACTION_CANCEL event, and no further
      * messages will be delivered here.
+
+     * 该方法存在于ViewGroup类中，对于View类并无此方法。表示是否拦截某个事件，ViewGroup如果成功拦截某个事件，
+ 	   那么这个事件就不在向下进行传递。对于同一个事件序列当中，当前View若是成功拦截该事件，
+ 	   那么对于后面的一系列事件不会再次调用该方法。返回的结果表示是否拦截当前事件，默认返回false。
+ 	   由于一个View它已经处于最底层，它不会存在子控件，所以无该方法。 
      */
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (ev.isFromSource(InputDevice.SOURCE_MOUSE)

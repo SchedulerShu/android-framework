@@ -3058,9 +3058,15 @@ public class Activity extends ContextThemeWrapper
      */
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            onUserInteraction();
+            onUserInteraction();//点进去可以看到这是一个空方法，我们可以根据需求重写该方法
         }
         if (getWindow().superDispatchTouchEvent(ev)) {
+
+			//Activity又会将事件交由Window处理,
+			//Window它是一个抽象类，它的具体实现只有一个PhoneWindow，
+         	//也就是说这个时候，Activity将事件交由PhoneWindow中的
+        	//superDispatchTouchEvent方法。现在跟踪进去看一下这个superDispatchTouchEvent代码。
+		
             return true;
         }
         return onTouchEvent(ev);

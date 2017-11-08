@@ -1833,6 +1833,12 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
     @Override
     public boolean superDispatchTouchEvent(MotionEvent event) {
+		/**
+     	 * 这里面的mDecor它是一个DecorView，DecorView它是一个Activity的顶级View。
+     	 * 它是PhoneWindow的一个内部类，继承自FrameLayout。于是在这个时候事件又交由DecorView的
+     	 * superDispatchTouchEvent方法来处理。下面就来看一下这个superDispatchTouchEvent方法。
+     	*/
+	
         boolean handled = mDecor.superDispatchTouchEvent(event);
         if (DBG_MOTION) {
             Log.d(TAG, "superDispatchTouchEvent = " + event + ", handled = " + handled);

@@ -432,6 +432,10 @@ public class DecorView extends FrameLayout implements RootViewSurfaceTaker, Wind
     }
 
     public boolean superDispatchTouchEvent(MotionEvent event) {
+    	/**
+   		 DecorView它调用了父类的dispatchTouchEvent方法。在上面说到DecorView它继承了FrameLayout，
+   		 而这个FrameLayout又继承自ViewGroup。所以在这个时候事件就开始交给了ViewGroup进行处理了.
+ 		*/
         return super.dispatchTouchEvent(event);
     }
 
