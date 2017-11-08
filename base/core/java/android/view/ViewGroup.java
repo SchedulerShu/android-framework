@@ -4516,6 +4516,13 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
         clearCachedLayoutMode();
     }
 
+	/**
+ 	 * 当View和Window绑定时就会调用这个函数
+ 	 * 生命周期为onCreate->onStart->onResume->onAttachedToWindow	
+ 	 * DecorView的LayoutParams是在ActivityThread的handleResumeActivity中设置的，
+ 	 * 并且该函数会调用Activity的onResume生命周期，所以在onResume之后可以设置窗体尺寸；
+ 	 */
+
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();

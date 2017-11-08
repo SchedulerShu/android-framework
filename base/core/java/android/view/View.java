@@ -20081,7 +20081,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                 // measure ourselves, this should set the measured dimension flag back
                 /// M: Monitor onMeasue time if longer than 3s print log.
                 long logTime = System.currentTimeMillis();
-                onMeasure(widthMeasureSpec, heightMeasureSpec);
+                onMeasure(widthMeasureSpec, heightMeasureSpec); //实际的自我测量
                 long nowTime = System.currentTimeMillis();
                 if (nowTime - logTime > DBG_TIMEOUT_VALUE) {
                     Log.d(VIEW_LOG_TAG, "[ANR Warning]onMeasure time too long, this =" + this
