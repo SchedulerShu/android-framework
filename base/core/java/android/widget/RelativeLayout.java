@@ -61,6 +61,15 @@ import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR1;
  * {@link android.view.ViewGroup.LayoutParams#WRAP_CONTENT WRAP_CONTENT} and a child set to
  * {@link #ALIGN_PARENT_BOTTOM}.
  * </p>
+
+
+ * 在RelativeLayout的size设置和子视图的定位之中，两者不允许产生循环依赖，比如，
+ * 将RelativeLayout高设置为wrap_content，又将子视图设置为align_parent_bottom。
+ * wrap_content导致RelativeLayout需要等待子视图确定好高度，它才能确定好自己的高度；
+ * 而align_parent_bottom导致子视图需要等待父视图RelativeLayout确定了底部位置才能确定自己的位置，
+ * 可是父视图现在都不知道自己多高，怎么知道自己的底部在哪里呢？所以父视图干脆宣布wrap_content无效，
+ * 用match_parent来做高度了。
+ 
  *
  * <p><strong>Note:</strong> In platform version 17 and lower, RelativeLayout was affected by
  * a measurement bug that could cause child views to be measured with incorrect
