@@ -296,15 +296,17 @@ public final class ContentService extends IContentService.Stub {
     @Override
     public void registerContentObserver(Uri uri, boolean notifyForDescendants,
                                         IContentObserver observer, int userHandle) {
+		// 判空操作，observer对象与uri都是必需的
         if (observer == null || uri == null) {
             throw new IllegalArgumentException("You must pass a valid uri and observer");
         }
-
+		// 获取应用端进程与线程id
         final int uid = Binder.getCallingUid();
         final int pid = Binder.getCallingPid();
         final int callingUserHandle = UserHandle.getCallingUserId();
         // Registering an observer for any user other than the calling user requires uri grant or
         // cross user permission
+        // 权限验证，有些uri如短信读取，需要在manifest注明权限的，用户允许后才能监听
         if (callingUserHandle != userHandle) {
             if (checkUriPermission(uri, pid, uid, Intent.FLAG_GRANT_READ_URI_PERMISSION, userHandle)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -316,6 +318,7 @@ public final class ContentService extends IContentService.Stub {
         if (userHandle < 0) {
             if (userHandle == UserHandle.USER_CURRENT) {
                 userHandle = ActivityManager.getCurrentUser();
+			// 当UserHandle传入的不为USER_ALL时会抛出异常，默认的UserHandle是客户端的uid
             } else if (userHandle != UserHandle.USER_ALL) {
                 throw new InvalidParameterException("Bad user handle for registerContentObserver: "
                         + userHandle);
@@ -323,6 +326,8 @@ public final class ContentService extends IContentService.Stub {
         }
 
         synchronized (mRootNode) {
+	        // node确定可以被添加，使用初始化完成的root节点添加node
+	        // 这里用到了设计模式中的组合模式
             mRootNode.addObserverLocked(uri, observer, notifyForDescendants, mRootNode,
                     uid, pid, userHandle);
             if (false) Log.v(TAG, "Registered observer " + observer + " at " + uri +
@@ -1273,13 +1278,16 @@ public final class ContentService extends IContentService.Stub {
             if (uri == null) {
                 return 0;
             }
+			// 返回uri路径的分段个数
+    		// 如：content://sms/inbox，则这个方法会返回3，表示这个节点将会被放到第3层，mRootNode为第1层
             return uri.getPathSegments().size() + 1;
         }
-
+		// userHandle要么是客户端uid要么是USER_ALL
         // Invariant:  userHandle is either a hard user number or is USER_ALL
         public void addObserverLocked(Uri uri, IContentObserver observer,
                                       boolean notifyForDescendants, Object observersLock,
                                       int uid, int pid, int userHandle) {
+			// index初始化为0
             addObserverLocked(uri, 0, observer, notifyForDescendants, observersLock,
                     uid, pid, userHandle);
         }
@@ -1288,17 +1296,23 @@ public final class ContentService extends IContentService.Stub {
                                        boolean notifyForDescendants, Object observersLock,
                                        int uid, int pid, int userHandle) {
             // If this is the leaf node add the observer
+            // index初始化为0
+            // 如何这个node是子节点，则加入到树中
+    		// 如何不是，则继续向树的下一层搜索
             if (index == countUriSegments(uri)) {
                 mObservers.add(new ObserverEntry(observer, notifyForDescendants, observersLock,
                         uid, pid, userHandle));
                 return;
             }
 
+			// 通过查看uri字符串确认是否有合法的子节点存在
+    		// 如果不存在会抛出异常终止注册
             // Look to see if the proper child already exists
             String segment = getUriSegment(uri, index);
             if (segment == null) {
                 throw new IllegalArgumentException("Invalid Uri (" + uri + ") used for observer");
             }
+			// 如果存在，则遍历当前的每个子节点，查看当前的节点名称是否和已存在的子节点名称能匹配上
             int N = mChildren.size();
             for (int i = 0; i < N; i++) {
                 ObserverNode node = mChildren.get(i);
@@ -1309,6 +1323,8 @@ public final class ContentService extends IContentService.Stub {
                 }
             }
 
+			// 如果目前已经存在的节点都不能和当前节点匹配上，则新建一个子节点，将observer添加到这个节点下
+   			// index自增1
             // No child found, create one
             ObserverNode node = new ObserverNode(segment);
             mChildren.add(node);
@@ -1430,3 +1446,15 @@ public final class ContentService extends IContentService.Stub {
         }
     }
 }
+
+
+/**
+ * ContentService中使用了以mRootNode为root节点的树来维护已注册的ContentObserver, 属于设计模式中的组合模式
+ * StringUri中的路径层级和组合模式中的树可以相互对应
+ * ObserverNode维护了mChilderen和mObservers两个链表，mChildren代表了这个节点的子节点，mObservers代表了这个节点下的ContentObserver
+ * 当客户端调用register接口后，相应的ContentObserver已经被存取到了ContentService维护的树中。
+ * 当ContentProvider数据变化后，这时ContentService该怎么找到对应的Observer进行回调呢？
+ * 一个继承ContentProvider并实现了onUpdate接口的类：
+ 		getContext().getContentResolver().notifyChange(url, null);
+ 
+ */

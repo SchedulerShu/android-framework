@@ -236,6 +236,7 @@ class ContextImpl extends Context {
 
     @Override
     public ContentResolver getContentResolver() {
+    	// mContentResolver在ContextImpl初始化时被实例化，调用get接口时直接被返回。
         return mContentResolver;
     }
 
@@ -2112,7 +2113,7 @@ class ContextImpl extends Context {
                 mOpPackageName = mBasePackageName;
             }
         }
-
+		//最终ApplicationContentResolver负责了我们的APP ContentProvider CRUD这块的操作。
         mContentResolver = new ApplicationContentResolver(this, mainThread, user);
     }
 

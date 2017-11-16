@@ -116,6 +116,7 @@ class WindowList extends ArrayList<WindowState> {
 
 /**
  * A window in the window manager.
+ * WindowState用于保存窗口的信息，在WMS中它用来描述一个窗口
  */
 final class WindowState implements WindowManagerPolicy.WindowState {
     static final String TAG = TAG_WITH_CLASS_NAME ? "WindowState" : TAG_WM;

@@ -11174,7 +11174,7 @@ public final class ActivityManagerService extends ActivityManagerNative
 
         synchronized(this) {
             long startTime = SystemClock.uptimeMillis();
-
+			// 获取调用者的ProcessRecord对象
             ProcessRecord r = null;
             if (caller != null) {
                 r = getRecordForAppLocked(caller);

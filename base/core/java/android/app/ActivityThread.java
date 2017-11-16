@@ -5560,6 +5560,7 @@ public final class ActivityThread {
 
     public final IContentProvider acquireProvider(
             Context c, String auth, int userId, boolean stable) {
+        // 现在本地寻找provider,如果没有的话才像AMS去请求
         final IContentProvider provider = acquireExistingProvider(c, auth, userId, stable);
         if (provider != null) {
             return provider;
@@ -5594,6 +5595,7 @@ public final class ActivityThread {
         // be re-entrant in the case where the provider is in the same process.
         IActivityManager.ContentProviderHolder holder = null;
         try {
+			 // 向AMS请求ContentProvider，这块是核心方法
             holder = ActivityManagerNative.getDefault().getContentProvider(
                     getApplicationThread(), auth, userId, stable);
         } catch (RemoteException ex) {
@@ -5606,6 +5608,8 @@ public final class ActivityThread {
 
         // Install provider will increment the reference count for us, and break
         // any ties in the race.
+         // "安装"provider，说白了就是新建实例，增减引用这类操作
+    	// 这块的代码放到后面的scheduleInstallProvider再分析
         holder = installProvider(c, holder, holder.info,
                 true /*noisy*/, holder.noReleaseNeeded, stable);
         return holder.provider;

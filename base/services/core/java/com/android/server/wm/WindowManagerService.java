@@ -490,6 +490,12 @@ public class WindowManagerService extends IWindowManager.Stub
 
     final boolean mLimitedAlphaCompositing;
 
+	/**
+		WindowManagerPolicy（WMP）类型的变量。WindowManagerPolicy是窗口管理策略的接口类，用来定义一个窗口策
+		略所要遵循的通用规范，并提供了WindowManager所有的特定的UI行为。它的具体实现类为PhoneWindowManager，
+		这个实现类在WMS创建时被创建。WMP允许定制窗口层级和特殊窗口类型以及关键的调度和布局。
+	*/
+
     final WindowManagerPolicy mPolicy = new PhoneWindowManager();
 
     final IActivityManager mActivityManager;
@@ -501,6 +507,8 @@ public class WindowManagerService extends IWindowManager.Stub
 
     /**
      * All currently active sessions with clients.
+     Session，它主要用于进程间通信，其他的应用程序进程想要和WMS进程进行通信就需要经过Session，
+     并且每个应用程序进程都会对应一个Session，WMS保存这些Session用来记录所有向WMS提出窗口管理服务的客户端。 
      */
     final ArraySet<Session> mSessions = new ArraySet<>();
 
@@ -509,6 +517,7 @@ public class WindowManagerService extends IWindowManager.Stub
      * This is also used as the lock for all of our state.
      * NOTE: Never call into methods that lock ActivityManagerService while holding this object.
      */
+     //mWindowMap就是用来保存WMS中各种窗口的集合
     final HashMap<IBinder, WindowState> mWindowMap = new HashMap<>();
 
     /**
@@ -2003,7 +2012,16 @@ public class WindowManagerService extends IWindowManager.Stub
         }
         return false;
     }
+	/*
+	 addWindow主要做了4件事:
+		1. 对所要添加的窗口进行检查，如果窗口不满足一些条件，就不会再执行下面的代码逻辑。 
+		2. WindowToken相关的处理，比如有的窗口类型需要提供WindowToken，没有提供的话就不会执行下面的代码逻辑，
+		   有的窗口类型则需要由WMS隐式创建WindowToken。 
+		3. WindowState的创建和相关处理，将WindowToken和WindowState相关联。 
+		4. 创建和配置DisplayContent，完成窗口添加到系统前的准备工作。
 
+	*/
+	
     public int addWindow(Session session, IWindow client, int seq,
             WindowManager.LayoutParams attrs, int viewVisibility, int displayId,
             Rect outContentInsets, Rect outStableInsets, Rect outOutsets,

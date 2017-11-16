@@ -518,6 +518,11 @@ public abstract class ContentResolver {
             @Nullable String[] selectionArgs, @Nullable String sortOrder,
             @Nullable CancellationSignal cancellationSignal) {
         Preconditions.checkNotNull(uri, "uri");
+
+		// 获取一个unstableProvider，这个stable与unstable的概念在于AMS中会维护unstable, stable这两个计数
+		// 如果当stable的计数大于0，当ContentProvider服务端进程死亡时，那么使用这个服务的客户端进程也会受牵连被杀死
+		// 这里query先尝试使用unstableProvider，表示AMS那边只会增加unstable的计数，客户端不会收到联级诛杀的牵连
+		
         IContentProvider unstableProvider = acquireUnstableProvider(uri);
         if (unstableProvider == null) {
             return null;
@@ -534,17 +539,24 @@ public abstract class ContentResolver {
                 cancellationSignal.setRemote(remoteCancellationSignal);
             }
             try {
+				 // binder call到服务端，返回了一个cursor对象
+        	  	// 当调用cursor.close时，会调用调releaseProvider来释放ContentProvider服务端与客户端之间的引用
                 qCursor = unstableProvider.query(mPackageName, uri, projection,
                         selection, selectionArgs, sortOrder, remoteCancellationSignal);
             } catch (DeadObjectException e) {
                 // The remote process has died...  but we only hold an unstable
                 // reference though, so we might recover!!!  Let's try!!!!
                 // This is exciting!!1!!1!!!!1
+                // 第一次使用unstable尝试，服务端进程可能死亡了抛了异常
+            	// 先释放unstableProvider相关的引用
                 unstableProviderDied(unstableProvider);
+				// 第二次进行尝试时，将使用stableProvider
                 stableProvider = acquireProvider(uri);
                 if (stableProvider == null) {
                     return null;
                 }
+				 // 注意，失败一次后将使用stableProvider,这次如果服务端进程被杀
+            	// 并且cursor还没有调用close之前，那么客户端的进程会受到牵连也被杀死
                 qCursor = stableProvider.query(mPackageName, uri, projection,
                         selection, selectionArgs, sortOrder, remoteCancellationSignal);
             }
@@ -1689,7 +1701,8 @@ public abstract class ContentResolver {
      */
     public final void registerContentObserver(@NonNull Uri uri, boolean notifyForDescendants,
             @NonNull ContentObserver observer) {
-        Preconditions.checkNotNull(uri, "uri");
+		// registerContentObserver方法首先会进行uri与observer的判空，如何这两个其中一个为空注册都不会成功。
+		Preconditions.checkNotNull(uri, "uri");
         Preconditions.checkNotNull(observer, "observer");
         registerContentObserver(
                 ContentProvider.getUriWithoutUserId(uri),
