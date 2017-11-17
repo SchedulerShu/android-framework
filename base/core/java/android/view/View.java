@@ -5542,8 +5542,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * @see #setLongClickable(boolean)
      */
     public void setOnLongClickListener(@Nullable OnLongClickListener l) {
-        if (!isLongClickable()) {
-            setLongClickable(true);
+        if (!isLongClickable()) {   //事件监听中先判断了是否长按
+            setLongClickable(true); //强制把它变为ture
         }
         getListenerInfo().mOnLongClickListener = l;
     }
@@ -15703,7 +15703,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * high-level events via {@link #post(Runnable)}, {@link #postDelayed(Runnable, long)} or
      * {@link android.os.Handler} should override this method, call
      * <code>super.onCancelPendingInputEvents()</code> and remove those callbacks as appropriate.
-     * </p>
+     * </p>   移除所有的事件回调以及取消了长按操作。
      */
     public void onCancelPendingInputEvents() {
         removePerformClickCallback();
