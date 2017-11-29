@@ -112,7 +112,7 @@ public class ResourcesImpl {
     private final XmlBlock[] mCachedXmlBlocks = new XmlBlock[XML_BLOCK_CACHE_SIZE];
 
 
-    final AssetManager mAssets;
+    final AssetManager mAssets; //最终获取资源都是通过 AssetManager 获取的
     private final DisplayMetrics mMetrics = new DisplayMetrics();
     private final DisplayAdjustments mDisplayAdjustments;
 
@@ -209,6 +209,14 @@ public class ResourcesImpl {
         throw new NotFoundException("String resource name " + name);
     }
 
+	/**
+     * 通过给的资源名称返回一个资源的标识id。
+     * @param name 描述资源的名称
+     * @param defType 资源的类型
+     * @param defPackage 包名
+     * 
+     * @return 返回资源id，0标识未找到该资源
+     */
     int getIdentifier(String name, String defType, String defPackage) {
         if (name == null) {
             throw new NullPointerException("name is null");

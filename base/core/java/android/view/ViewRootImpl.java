@@ -7529,7 +7529,7 @@ public final class ViewRootImpl implements ViewParent,
         return null;
     }
 
-    void checkThread() {
+    void checkThread() {    // 该方法是 viewRootImpl.java 内部代码 检查当前线程 限制子线程更新UI
         if (mThread != Thread.currentThread()) {
             throw new CalledFromWrongThreadException(
                     "Only the original thread that created a view hierarchy can touch its views.");

@@ -2071,6 +2071,7 @@ public class Resources {
      * 
      * @return int The associated resource identifier.  Returns 0 if no such
      *         resource was found.  (0 is not a valid resource ID.)
+     *
      */
     public int getIdentifier(String name, String defType, String defPackage) {
         return mResourcesImpl.getIdentifier(name, defType, defPackage);
